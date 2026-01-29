@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CYBER_GAMES | Medien</title>
+
+    <!-- Font Awesome für Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="./CSS/style4.css" />
+</head>
+<body>
+    <div class="matrix-effect" id="matrix"></div>
+
+    <header>
+        <h1>// CYBER_GAMES Medien</h1>
+    </header>
+
+    <main class="main-content">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <h2>&gt; MEDIEN_TERMINAL</h2>
+                <div class="terminal-controls">
+                    <span class="control close"></span>
+                    <span class="control minimize"></span>
+                    <span class="control maximize"></span>
+                </div>
+            </div>
+
+            <div class="terminal-body">
+                <div class="media-links">
+                    <div class="media-card" onclick="openLink('https://steamcommunity.com/profiles/76561198866564066')">
+                        <h3><i class="fab fa-steam"></i> STEAM</h3>
+                        <p>Besuche mein Steam Profil</p>
+                    </div>
+
+                    <div class="media-card" onclick="openLink('https://discord.gg/T6UtrHWQ')">
+                        <h3><i class="fab fa-discord"></i> DISCORD</h3>
+                        <p>Verbinde dich auf Discord</p>
+                    </div>
+
+                    <div class="media-card" onclick="openLink('https://launcher.store.epicgames.com/u/8a0c32c5cdd64fddab3ca1dc35ef502e')">
+                        <h3>
+                            <img src="icons/epicgames.svg" alt="Epic Games Icon" class="icon" />
+                            EPIC GAMES
+                        </h3>
+                        <p>Folge mir auf Epic Games</p>
+                    </div>
+
+                    <div class="media-card" onclick="openLink('https://www.youtube.com/@solo.tommy1149')">
+                        <h3><i class="fab fa-youtube"></i> YOUTUBE</h3>
+                        <p>Schau dir meine Videos an</p>
+                    </div>
+
+                    <div class="media-card" onclick="openLink('https://www.snapchat.com/add/t0mmy_s?share_id=I7lmirKXung&locale=de-DE')">
+                        <h3><i class="fab fa-snapchat-ghost"></i> SNAPCHAT</h3>
+                        <p>Folge mir auf Snapchat</p>
+                    </div>
+
+                    <div class="media-card" onclick="openLink('https://www.instagram.com/tommy_sieder?igsh=MTd2dXBycnBuMWI3Yg==')">
+                        <h3><i class="fab fa-instagram"></i> INSTAGRAM</h3>
+                        <p>Schau dir meine Bilder auf Instagram an</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal-footer">
+                <p class="blink">&gt;&gt; SYSTEM_AKTIV [MEDIEN_BEREIT]</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&gt;&gt; SYSTEM_ZEIT: <span id="time"></span> | © 2024 CYBER_GAMES</p>
+        <div class="nav-links">
+            <a href="index.html">&gt; HOME</a>
+            <a href="gym.html">&gt; GYM</a>
+            <a href="stats.html">&gt; STATS</a>
+        </div>
+    </footer>
+
+    <script>
+        // Matrix-Effekt
+        const canvas = document.createElement('canvas');
+        canvas.className = 'matrix-effect';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = "01";
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for(let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+
+            for(let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 33);
+
+        // Live-Uhr
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString();
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function openLink(url) {
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

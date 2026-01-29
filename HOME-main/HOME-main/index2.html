@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CSS/style2.css">
+    <title>CYBER_GAMES | Terminal</title>
+    <link rel="stylesheet" href="games.css">
+</head>
+<body>
+    <div class="matrix-effect" id="matrix"></div>
+    
+    <header>
+        <h1>// CYBER_GAMES v1.0</h1>
+    </header>
+    
+    <main class="main-content">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <h2>> SPIELE_TERMINAL</h2>
+                <div class="terminal-controls">
+                    <span class="control close"></span>
+                    <span class="control minimize"></span>
+                    <span class="control maximize"></span>
+                </div>
+            </div>
+            
+            <div class="terminal-body">
+                <div class="game-selection">
+                    <div class="game-card" onclick="loadGame('tictactoe')">
+                        <h3>> 3_GEWINNT</h3>
+                        <p>Klassisches Tic-Tac-Toe</p>
+                        <div class="game-preview">X | O | X<br>-----------<br>O | X | O<br>-----------<br>X | O | X</div>
+                    </div>
+                    
+                    <div class="game-card" onclick="loadGame('connectfour')">
+                        <h3>> 4_GEWINNT</h3>
+                        <p>Connect Four Spiel</p>
+                        <div class="game-preview">|O| | | | | |<br>|X|O| | | | |<br>|X|X|O| | | |<br>|X|X|X|O| | |</div>
+                    </div>
+                    
+                    <div class="game-card" onclick="loadGame('blackjack')">
+                        <h3>> BLACKJACK</h3>
+                        <p>Kartenglücksspiel</p>
+                        <div class="game-preview">♠A ♥K<br>♣7 ♦Q<br>BJ:21</div>
+                    </div>
+                </div>
+                
+                <div id="game-container">
+                    <!-- Hier werden die Spiele geladen -->
+                    <div class="welcome-message">
+                        <p>> WÄHLE EIN SPIEL AUS DEM TERMINAL</p>
+                        <p>> SYSTEM_BEREIT [SPIEL_LAUFT]</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="terminal-footer">
+                <p class="blink">>> SYSTEM_AKTIV [SPIELSTATUS: BEREIT]</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>> SYSTEM_ZEIT: <span id="time"></span> | © 2024 CYBER_GAMES</p>
+        <div class="nav-links">
+            <a href="index.html">> HOME</a>
+            <a href="gym.html">> GYM</a>
+            <a href="stats.html">> STATS</a>
+        </div>
+    </footer>
+
+    <!-- Spiele-Templates -->
+    <template id="tictactoe-template">
+        <div class="game-area">
+            <h2>> 3_GEWINNT</h2>
+            <div class="player-info">
+                <span id="ttt-player">AKTUELLER SPIELER: X</span>
+                <span id="ttt-status">STATUS: LAUFT</span>
+            </div>
+            <div class="ttt-grid">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <button class="game-btn" onclick="resetTTT()">NEUES SPIEL</button>
+        </div>
+    </template>
+
+    <template id="connectfour-template">
+        <div class="game-area">
+            <h2>> 4_GEWINNT</h2>
+            <div class="player-info">
+                <span id="cf-player">AKTUELLER SPIELER: ROT</span>
+                <span id="cf-status">STATUS: LAUFT</span>
+            </div>
+            <div class="cf-grid">
+                <!-- Columns werden dynamisch in initCF() erstellt -->
+            </div>
+            <button class="game-btn" onclick="resetCF()">NEUES SPIEL</button>
+        </div>
+    </template>
+
+    <template id="blackjack-template">
+        <div class="game-area">
+            <h2>> BLACKJACK</h2>
+            <div class="player-info">
+                <span id="bj-status">EINSATZ: 10 CREDITS</span>
+                <span id="bj-score">PUNKTE: 0</span>
+            </div>
+            <div class="cards-area">
+                <div class="dealer-cards">
+                    <h3>DEALER:</h3>
+                    <div id="dealer-hand"></div>
+                    <div id="dealer-score"></div>
+                </div>
+                <div class="player-cards">
+                    <h3>SPIELER:</h3>
+                    <div id="player-hand"></div>
+                    <div id="player-score"></div>
+                </div>
+            </div>
+            <div class="bj-controls">
+                <button class="game-btn" id="hit-btn" onclick="bjHit()">HIT</button>
+                <button class="game-btn" id="stand-btn" onclick="bjStand()">STAND</button>
+                <button class="game-btn" id="newgame-btn" onclick="resetBJ()">NEUES SPIEL</button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // Matrix-Effekt
+        const canvas = document.createElement('canvas');
+        canvas.className = 'matrix-effect';
+        document.body.appendChild(canvas);
+        
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const chars = "01";
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        
+        for(let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+        
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+            
+            for(let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                
+                drops[i]++;
+            }
+        }
+        
+        setInterval(drawMatrix, 33);
+        
+        // Live-Uhr
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString();
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Spiellogik
+        function loadGame(game) {
+            const container = document.getElementById('game-container');
+            const template = document.getElementById(`${game}-template`);
+            
+            container.innerHTML = '';
+            container.appendChild(template.content.cloneNode(true));
+            
+            if(game === 'tictactoe') initTTT();
+            if(game === 'connectfour') initCF();
+            if(game === 'blackjack') initBJ();
+        }
+
+        // 3 Gewinnt Logik
+        let tttBoard = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+
+        function initTTT() {
+            const cells = document.querySelectorAll('.ttt-grid .cell');
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleTTTClick);
+            });
+        }
+
+        function handleTTTClick(e) {
+            const cell = e.target;
+            const index = parseInt(cell.getAttribute('data-index'));
+            
+            if(tttBoard[index] !== '' || !gameActive) return;
+            
+            tttBoard[index] = currentPlayer;
+            cell.textContent = currentPlayer;
+            
+            checkTTTResult();
+            
+            if(gameActive) {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                document.getElementById('ttt-player').textContent = `AKTUELLER SPIELER: ${currentPlayer}`;
+            }
+        }
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // horizontal
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // vertikal
+            [0, 4, 8], [2, 4, 6]             // diagonal
+        ];
+
+        function checkTTTResult() {
+            let roundWon = false;
+            
+            for(let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                
+                if(tttBoard[a] === '' || tttBoard[b] === '' || tttBoard[c] === '') continue;
+                
+                if(tttBoard[a] === tttBoard[b] && tttBoard[b] === tttBoard[c]) {
+                    roundWon = true;
+                    break;
+                }
+            }
+            
+            if(roundWon) {
+                document.getElementById('ttt-status').textContent = `STATUS: ${currentPlayer} GEWINNT!`;
+                gameActive = false;
+                return;
+            }
+            
+            if(!tttBoard.includes('')) {
+                document.getElementById('ttt-status').textContent = `STATUS: UNENTSCHIEDEN!`;
+                gameActive = false;
+            }
+        }
+
+        function resetTTT() {
+            tttBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            
+            document.querySelectorAll('.ttt-grid .cell').forEach(cell => {
+                cell.textContent = '';
+            });
+            
+            document.getElementById('ttt-player').textContent = `AKTUELLER SPIELER: X`;
+            document.getElementById('ttt-status').textContent = `STATUS: LAUFT`;
+        }
+
+        // 4 Gewinnt Logik
+        const ROWS = 6;
+        const COLS = 7;
+        let cfBoard = Array(ROWS).fill().map(() => Array(COLS).fill(''));
+        let currentCFPlayer = 'red';
+        let cfGameActive = true;
+
+        function initCF() {
+            const grid = document.querySelector('.cf-grid');
+            grid.innerHTML = '';
+            
+            for(let col = 0; col < COLS; col++) {
+                const column = document.createElement('div');
+                column.className = 'cf-column';
+                column.dataset.col = col;
+                
+                for(let row = ROWS - 1; row >= 0; row--) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cf-cell';
+                    cell.dataset.row = row;
+                    column.appendChild(cell);
+                }
+                
+                grid.appendChild(column);
+            }
+            
+            document.querySelectorAll('.cf-column').forEach(col => {
+                col.addEventListener('click', handleCFClick);
+            });
+        }
+
+        function handleCFClick(e) {
+            if(!cfGameActive) return;
+            
+            const col = parseInt(e.currentTarget.dataset.col);
+            const row = getEmptyRow(col);
+            
+            if(row === -1) return;
+            
+            cfBoard[row][col] = currentCFPlayer;
+            
+            const cells = document.querySelectorAll(`.cf-column[data-col="${col}"] .cf-cell`);
+            const cell = cells[ROWS - 1 - row];
+            cell.classList.add(currentCFPlayer);
+            
+            if(checkCFWin(row, col)) {
+                document.getElementById('cf-status').textContent = `STATUS: ${currentCFPlayer === 'red' ? 'ROT' : 'GELB'} GEWINNT!`;
+                cfGameActive = false;
+                return;
+            }
+            
+            if(checkCFDraw()) {
+                document.getElementById('cf-status').textContent = `STATUS: UNENTSCHIEDEN!`;
+                cfGameActive = false;
+                return;
+            }
+            
+            currentCFPlayer = currentCFPlayer === 'red' ? 'yellow' : 'red';
+            document.getElementById('cf-player').textContent = `AKTUELLER SPIELER: ${currentCFPlayer === 'red' ? 'ROT' : 'GELB'}`;
+        }
+
+        function getEmptyRow(col) {
+            for(let row = 0; row < ROWS; row++) {
+                if(cfBoard[row][col] === '') return row;
+            }
+            return -1;
+        }
+
+        function checkCFWin(row, col) {
+            const directions = [
+                [0, 1],  // horizontal
+                [1, 0],   // vertikal
+                [1, 1],   // diagonal down
+                [1, -1]   // diagonal up
+            ];
+            
+            for(const [dx, dy] of directions) {
+                let count = 1;
+                
+                // In eine Richtung zählen
+                count += countCFDirection(row, col, dx, dy);
+                // In die entgegengesetzte Richtung zählen
+                count += countCFDirection(row, col, -dx, -dy);
+                
+                if(count >= 4) return true;
+            }
+            
+            return false;
+        }
+
+        function countCFDirection(row, col, dx, dy) {
+            const player = cfBoard[row][col];
+            let count = 0;
+            let r = row + dx;
+            let c = col + dy;
+            
+            while(r >= 0 && r < ROWS && c >= 0 && c < COLS && cfBoard[r][c] === player) {
+                count++;
+                r += dx;
+                c += dy;
+            }
+            
+            return count;
+        }
+
+        function checkCFDraw() {
+            return cfBoard.every(row => row.every(cell => cell !== ''));
+        }
+
+        function resetCF() {
+            cfBoard = Array(ROWS).fill().map(() => Array(COLS).fill(''));
+            cfGameActive = true;
+            currentCFPlayer = 'red';
+            
+            document.querySelectorAll('.cf-cell').forEach(cell => {
+                cell.className = 'cf-cell';
+            });
+            
+            document.getElementById('cf-player').textContent = `AKTUELLER SPIELER: ROT`;
+            document.getElementById('cf-status').textContent = `STATUS: LAUFT`;
+        }
+
+        // Blackjack Logik
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        let bjDeck = [];
+        let bjDealerHand = [];
+        let bjPlayerHand = [];
+        let bjGameOver = false;
+        let bjCredits = 100;
+
+        function initBJ() {
+            resetBJ();
+        }
+
+        function createDeck() {
+            bjDeck = [];
+            for(let suit of suits) {
+                for(let value of values) {
+                    bjDeck.push({suit, value});
+                }
+            }
+            shuffleDeck();
+        }
+
+        function shuffleDeck() {
+            for(let i = bjDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [bjDeck[i], bjDeck[j]] = [bjDeck[j], bjDeck[i]];
+            }
+        }
+
+        function dealCard(hand) {
+            if(bjDeck.length === 0) createDeck();
+            return hand.push(bjDeck.pop());
+        }
+
+        function calculateScore(hand) {
+            let score = 0;
+            let hasAce = false;
+            
+            for(let card of hand) {
+                if(card.value === 'A') {
+                    hasAce = true;
+                    score += 11;
+                } else if(['K', 'Q', 'J'].includes(card.value)) {
+                    score += 10;
+                } else {
+                    score += parseInt(card.value);
+                }
+            }
+            
+            if(score > 21 && hasAce) {
+                score -= 10;
+            }
+            
+            return score;
+        }
+
+        function updateBJUI() {
+            // Dealer Hand anzeigen
+            const dealerHandElement = document.getElementById('dealer-hand');
+            dealerHandElement.innerHTML = '';
+            
+            bjDealerHand.forEach((card, index) => {
+                const cardElement = document.createElement('span');
+                cardElement.className = 'bj-card';
+                cardElement.textContent = `${card.suit}${card.value}`;
+                if(index === 0 && !bjGameOver) {
+                    cardElement.textContent = '??';
+                }
+                dealerHandElement.appendChild(cardElement);
+            });
+            
+            // Player Hand anzeigen
+            const playerHandElement = document.getElementById('player-hand');
+            playerHandElement.innerHTML = '';
+            
+            bjPlayerHand.forEach(card => {
+                const cardElement = document.createElement('span');
+                cardElement.className = 'bj-card';
+                cardElement.textContent = `${card.suit}${card.value}`;
+                playerHandElement.appendChild(cardElement);
+            });
+            
+            // Scores anzeigen
+            const dealerScoreElement = document.getElementById('dealer-score');
+            const playerScoreElement = document.getElementById('player-score');
+            
+            if(bjGameOver) {
+                const dealerScore = calculateScore(bjDealerHand);
+                dealerScoreElement.textContent = `Punkte: ${dealerScore}`;
+            } else {
+                dealerScoreElement.textContent = '';
+            }
+            
+            const playerScore = calculateScore(bjPlayerHand);
+            playerScoreElement.textContent = `Punkte: ${playerScore}`;
+            
+            // Status und Credits anzeigen
+            document.getElementById('bj-status').textContent = `CREDITS: ${bjCredits}`;
+            document.getElementById('bj-score').textContent = `EINSATZ: 10`;
+            
+            // Buttons aktivieren/deaktivieren
+            document.getElementById('hit-btn').disabled = bjGameOver;
+            document.getElementById('stand-btn').disabled = bjGameOver;
+        }
+
+        function startNewBJGame() {
+            if(bjCredits < 10) {
+                alert("Nicht genug Credits!");
+                return;
+            }
+            
+            bjCredits -= 10;
+            bjGameOver = false;
+            bjDealerHand = [];
+            bjPlayerHand = [];
+            
+            createDeck();
+            
+            // Karten austeilen
+            dealCard(bjDealerHand);
+            dealCard(bjPlayerHand);
+            dealCard(bjDealerHand);
+            dealCard(bjPlayerHand);
+            
+            updateBJUI();
+            
+            // Sofortiger Blackjack?
+            if(calculateScore(bjPlayerHand) === 21) {
+                bjStand();
+            }
+        }
+
+        function bjHit() {
+            if(bjGameOver) return;
+            
+            dealCard(bjPlayerHand);
+            updateBJUI();
+            
+            if(calculateScore(bjPlayerHand) > 21) {
+                endBJGame("Spieler busted! Dealer gewinnt.");
+            }
+        }
+
+        function bjStand() {
+            if(bjGameOver) return;
+            
+            bjGameOver = true;
+            
+            // Dealer zieht Karten bis mindestens 17 Punkte
+            while(calculateScore(bjDealerHand) < 17) {
+                dealCard(bjDealerHand);
+            }
+            
+            const dealerScore = calculateScore(bjDealerHand);
+            const playerScore = calculateScore(bjPlayerHand);
+            
+            if(dealerScore > 21) {
+                endBJGame("Dealer busted! Spieler gewinnt.", 20);
+            } else if(dealerScore > playerScore) {
+                endBJGame("Dealer gewinnt!");
+            } else if(playerScore > dealerScore) {
+                endBJGame("Spieler gewinnt!", 20);
+            } else {
+                endBJGame("Unentschieden!", 10);
+            }
+        }
+
+        function endBJGame(message, winAmount = 0) {
+            bjGameOver = true;
+            bjCredits += winAmount;
+            updateBJUI();
+            
+            setTimeout(() => {
+                alert(message);
+            }, 100);
+        }
+
+        function resetBJ() {
+            startNewBJGame();
+        }
+    </script>
+    <style>
+        /* Stile für Blackjack-Karten */
+        .bj-card {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px;
+            background-color: rgba(0, 20, 0, 0.3);
+            border: 1px solid #0f0;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        /* Responsive Anpassungen */
+        @media (max-width: 768px) {
+            .game-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .ttt-grid {
+                width: 240px;
+            }
+            
+            .cell {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .cf-cell {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .bj-controls {
+                flex-direction: column;
+            }
+            
+            .bj-card {
+                padding: 5px;
+                min-width: 30px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</body>
+</html>
